@@ -1,0 +1,12 @@
+{
+  "video_width": 1080,
+  "video_height": 1920,
+  "fps": 60,
+  "duration": 60,
+  "theme": "Luxury Psychological Cinematic",
+  "voice": "Adam",
+  "music_volume": 0.25,
+  "voice_volume": 1.0,
+  "sfx_volume": 0.8,
+  "font": "assets/fonts/Anton-Regular.ttf"
+}

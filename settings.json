@@ -1,12 +1,18 @@
 {
   "video_width": 1080,
   "video_height": 1920,
-  "fps": 60,
-  "duration": 60,
+  "fps": 30,
+  "duration": 58,
   "theme": "Luxury Psychological Cinematic",
   "voice": "Adam",
-  "music_volume": 0.25,
+  "music_volume": 0.15,
   "voice_volume": 1.0,
-  "sfx_volume": 0.8,
-  "font": "assets/fonts/Anton-Regular.ttf"
+  "sfx_volume": 0.5,
+  "font": "assets/fonts/Anton-Regular.ttf",
+  "text_settings": {
+    "font_size": 75,
+    "color": "#FFFFFF",
+    "stroke_width": 2,
+    "stroke_color": "#000000"
+  }
 }

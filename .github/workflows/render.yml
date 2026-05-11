@@ -1,41 +1,54 @@
 name: Render Cinematic Video
 
 on:
-  workflow_dispatch:
+  workflow_dispatch: # تشغيل يدوي
+  # schedule:
+  #   - cron: '0 12 * * *' # مثال: تشغيل تلقائي كل يوم الساعة 12 ظهراً
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 30 # حماية للحساب من التعليق البرمجي
 
     steps:
-      - name: Checkout
+      - name: Checkout Repository
         uses: actions/checkout@v4
 
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
+          cache: 'pip' # تسريع البناء في المرات القادمة
 
-      - name: Install FFmpeg
+      - name: Install FFmpeg & ImageMagick
         run: |
           sudo apt update
-          sudo apt install ffmpeg -y
+          sudo apt install ffmpeg imagemagick -y
+          # مهم جداً لـ MoviePy للسماح باستخدام التسميات التوضيحية (Captions)
+          sudo sed -i 's/policy domain="path" rights="none" pattern="@\*"/policy domain="path" rights="read|write" pattern="@\*"/g' /etc/ImageMagick-6/policy.xml
 
       - name: Install dependencies
         run: |
+          python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Run Project
+      - name: Create Directories
+        run: |
+          mkdir -p temp/clips assets/fonts output
+
+      - name: Run Automation Pipeline
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
           PIXABAY_API_KEY: ${{ secrets.PIXABAY_API_KEY }}
-          HF_TOKEN: ${{ secrets.HF_TOKEN }}
-        run: |
-          python main.py
+          HF_TOKEN: ${{ secrets.HF_TOKEN }} # لـ Whisper إذا لزم الأمر
+          PYTHONPATH: .
+        run: python main.py
 
       - name: Upload Final Video
+        if: success()
         uses: actions/upload-artifact@v4
         with:
-          name: cinematic-video
+          name: cinematic-video-${{ github.run_id }}
           path: output/final.mp4
+          retention-days: 7

@@ -1,5 +1,5 @@
 google-generativeai
-moviepy
+moviepy<2.0.0
 requests
 python-dotenv
 numpy

@@ -1,52 +1,50 @@
-name: Render Cinematic Video
+# التعديل الجديد لنسخة MoviePy 2.0+
+from moviepy import VideoFileClip, AudioFileClip, TextClip, CompositeVideoClip, concatenate_videoclips
+from moviepy.video.tools.subtitles import SubtitlesClip
+import os
 
-on:
-  workflow_dispatch: # للتشغيل اليدوي من تبويب Actions
+def render_video(downloaded_paths, voice_path, captions_path):
+    try:
+        audio = AudioFileClip(voice_path)
+        
+        # ملاحظة: في الإصدار 2.0 قد تحتاج لإرسال الخط ككائن أو مسار مباشر
+        def generator(txt):
+            return TextClip(
+                text=txt,
+                font="assets/fonts/Anton-Regular.ttf",
+                font_size=70,
+                color='white',
+                stroke_color='black',
+                stroke_width=1.5,
+                method='caption',
+                size=(1080 * 0.8, None)
+            ).with_position(('center', 'center')) # استخدام with_position بدلاً من set_position
 
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
+        clips = []
+        for p in downloaded_paths:
+            # استخدام with_effects أو التعديل المباشر حسب الحاجة
+            clip = VideoFileClip(p).resized(height=1920) # resized بدلاً من resize
+            w, h = clip.size
+            clip = clip.cropped(x_center=w/2, width=1080) # cropped بدلاً من crop
+            clips.append(clip)
 
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
+        final_bg = concatenate_videoclips(clips, method="compose").subclipped(0, audio.duration)
 
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-          cache: 'pip'
+        if os.path.exists(captions_path):
+            subtitles = SubtitlesClip(captions_path, generator)
+            final_bg = CompositeVideoClip([final_bg, subtitles])
 
-      - name: Install FFmpeg & ImageMagick
-        run: |
-          sudo apt update
-          sudo apt install ffmpeg imagemagick -y
-          # تعديل سياسة ImageMagick للسماح لـ MoviePy بكتابة النصوص
-          sudo sed -i 's/policy domain="path" rights="none" pattern="@\*"/policy domain="path" rights="read|write" pattern="@\*"/g' /etc/ImageMagick-6/policy.xml
-
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-
-      - name: Create Directories
-        run: |
-          mkdir -p temp/clips assets/fonts output
-
-      - name: Run Automation Pipeline
-        env:
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
-          PIXABAY_API_KEY: ${{ secrets.PIXABAY_API_KEY }}
-          HF_TOKEN: ${{ secrets.HF_TOKEN }}
-          PYTHONPATH: .
-        run: python main.py
-
-      - name: Upload Final Video
-        if: success()
-        uses: actions/upload-artifact@v4
-        with:
-          name: cinematic-video-${{ github.run_id }}
-          path: output/final.mp4
-          retention-days: 7
+        output_file = "output/final.mp4"
+        final_bg = final_bg.with_audio(audio) # with_audio بدلاً من set_audio
+        
+        final_bg.write_videofile(
+            output_file,
+            fps=30,
+            codec="libx264",
+            audio_codec="aac"
+        )
+        
+        return output_file
+    except Exception as e:
+        print(f"Error: {e}")
+        return None

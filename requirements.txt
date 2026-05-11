@@ -1,12 +1,3 @@
-google-generativeai
-moviepy
-requests
-python-dotenv
-numpy
-opencv-python
-librosa
-soundfile
-pydub
-ffmpeg-python
-openai-whisper
-Pillow
+pip install google-generativeai moviepy requests python-dotenv \
+numpy opencv-python librosa soundfile pydub ffmpeg-python \
+openai-whisper Pillow

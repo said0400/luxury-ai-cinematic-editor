@@ -1,5 +1,5 @@
 google-generativeai
-moviepy<2.0.0
+moviepy>=2.0.0
 requests
 python-dotenv
 numpy
@@ -7,6 +7,5 @@ opencv-python
 librosa
 soundfile
 pydub
-ffmpeg-python
 openai-whisper
 Pillow
